@@ -1,0 +1,54 @@
+package sangamsagar.learningroom.kotlinMvvmArchitecture.ui
+
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
+import android.os.Bundle
+import android.provider.SyncStateContract
+import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.GridLayoutManager
+import android.support.v7.widget.LinearLayoutManager
+import dagger.android.AndroidInjection
+import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.toast
+import sangamsagar.learningroom.kotlinMvvmArchitecture.data.CryptoCurrency
+import sangamsagar.learningroom.kotlinMvvmArchitecture.utils.InfiniteScrollListener
+import sangamsagar.learningroom.R
+import sangamsagar.learningroom.kotlinMvvmArchitecture.utils.Constants.LIMIT
+import javax.inject.Inject
+
+class CryptoCurrencyActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var cryptoCurrencyViewModelFactory :CryptoCurrencyViewModelFactory
+    private var cryptocurrenciesAdapter : CryptoCurrencyAdapter(ArrayList())
+    private lateinit var  cryptoCurrencyViewModel: CryptoCurrencyViewModel
+
+    private var currentPage=0
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_crypto_currency)
+        AndroidInjection.inject(this)
+
+        initializeRecycler()
+
+        cryptoCurrencyViewModel =  ViewModelProviders.of(this,cryptoCurrencyViewModelFactory).get(
+            CryptoCurrencyViewModel::class.java)
+
+        loadData()
+
+        cryptoCurrencyViewModel.cryptocurrenciesResult().observe(this,
+            Observer<List<CryptoCurrency>>)
+        {
+            if(it!=null)
+            {
+                val position =  cryptocurrenciesAdapter.itemCount
+                cryptocurrenciesAdapter.addCrptoCurrencies(it)
+                recycler_view.adapter = cryptocurrenciesAdapter
+                recycler_view.scrollToPosition(position - SyncStateContract.Constants.LIST_SCROLLING)
+
+
+            }
+        })
+
+    
